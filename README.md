@@ -58,6 +58,7 @@ The app now ships with a polished, wide-layout explorer. If your processed CSVs 
 - Multi-team season trend comparison.
 - Game-level line charts and exports when `team_game_occi.csv` is available.
 - CSV download buttons for each view to take your slice to notebooks.
+Select a season to view team-level OCCI and browse the underlying table. Ensure processed CSVs exist first.
 
 ## Roadmap and future ideas
 
