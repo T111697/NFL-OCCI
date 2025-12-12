@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFL Offensive Conflict Creation Index (OCCI)</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+        }
+        
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .info-box p {
+            line-height: 1.6;
+            color: #555;
+        }
+        
+        .chart-container {
+            margin-bottom: 40px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .team-selector {
+            margin-bottom: 20px;
+        }
+        
+        .team-selector label {
+            font-weight: bold;
+            margin-right: 10px;
+            color: #555;
+        }
+        
+        .team-selector select {
+            padding: 10px 15px;
+            font-size: 1em;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            min-width: 150px;
+        }
+        
+        .team-selector select:focus {
+            outline: none;
+            border-color: #764ba2;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 968px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .metric-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏈 NFL Offensive Conflict Creation Index (OCCI)</h1>
+            <p class="subtitle">Measuring how offenses force defenses into difficult situations</p>
+        </header>
+        
+        <div class="info-box">
+            <h3>What is OCCI?</h3>
+            <p>
+                The Offensive Conflict Creation Index (OCCI) is a comprehensive metric that evaluates 
+                how effectively NFL offenses create structural challenges for opposing defenses. 
+                It analyzes multiple play-by-play factors including:
+            </p>
+            <ul style="margin-top: 10px; margin-left: 20px; line-height: 1.8;">
+                <li><strong>Motion & Tempo:</strong> Pre-snap movement and no-huddle usage</li>
+                <li><strong>Formation Complexity:</strong> Personnel groupings and alignments</li>
+                <li><strong>Target Depth:</strong> Vertical threat and field stretching</li>
+                <li><strong>Play Action & RPO:</strong> Deception and option plays</li>
+                <li><strong>Situational Variance:</strong> Unpredictability in play calling</li>
+            </ul>
+            <p style="margin-top: 10px;">
+                Higher OCCI scores indicate offenses that consistently force defenses to make difficult decisions and adjustments.
+            </p>
+        </div>
+        
+        <div class="chart-container">
+            <h2 class="chart-title">Team OCCI Rankings</h2>
+            <div id="teamRankingsChart" class="loading">Loading team rankings...</div>
+        </div>
+        
+        <div class="grid">
+            <div class="chart-container">
+                <h2 class="chart-title">OCCI Distribution</h2>
+                <div id="distributionChart" class="loading">Loading distribution...</div>
+            </div>
+            
+            <div class="chart-container">
+                <h2 class="chart-title">Pass vs Run OCCI</h2>
+                <div id="passRunChart" class="loading">Loading comparison...</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h2 class="chart-title">Team Detail Analysis</h2>
+            <div class="team-selector">
+                <label for="teamSelect">Select Team:</label>
+                <select id="teamSelect">
+                    <option value="">-- Select a team --</option>
+                </select>
+            </div>
+            <div id="teamDetailChart" class="loading">Select a team to view detailed breakdown...</div>
+        </div>
+        
+        <div class="chart-container">
+            <h2 class="chart-title">Team Statistics</h2>
+            <div id="teamTable" class="loading">Loading team statistics...</div>
+        </div>
+    </div>
+    
+    <script>
+        // Load team rankings chart
+        fetch('/api/team-chart')
+            .then(response => response.json())
+            .then(data => {
+                Plotly.newPlot('teamRankingsChart', data.data, data.layout, {responsive: true});
+            })
+            .catch(error => {
+                document.getElementById('teamRankingsChart').innerHTML = 
+                    '<p style="color: red;">Error loading chart: ' + error.message + '</p>';
+            });
+        
+        // Load OCCI distribution
+        fetch('/api/occi-distribution')
+            .then(response => response.json())
+            .then(data => {
+                Plotly.newPlot('distributionChart', data.data, data.layout, {responsive: true});
+            })
+            .catch(error => {
+                document.getElementById('distributionChart').innerHTML = 
+                    '<p style="color: red;">Error loading chart: ' + error.message + '</p>';
+            });
+        
+        // Load pass vs run comparison
+        fetch('/api/pass-vs-run')
+            .then(response => response.json())
+            .then(data => {
+                Plotly.newPlot('passRunChart', data.data, data.layout, {responsive: true});
+            })
+            .catch(error => {
+                document.getElementById('passRunChart').innerHTML = 
+                    '<p style="color: red;">Error loading chart: ' + error.message + '</p>';
+            });
+        
+        // Load team statistics table and populate selector
+        fetch('/api/team-rankings')
+            .then(response => response.json())
+            .then(data => {
+                // Populate team selector
+                const selector = document.getElementById('teamSelect');
+                data.forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team.posteam;
+                    option.textContent = team.posteam;
+                    selector.appendChild(option);
+                });
+                
+                // Create statistics table
+                let tableHTML = '<table><thead><tr>';
+                tableHTML += '<th>Rank</th><th>Team</th><th>Avg OCCI</th><th>Median OCCI</th>';
+                tableHTML += '<th>Total Plays</th><th>Pass Rate %</th></tr></thead><tbody>';
+                
+                data.forEach((team, index) => {
+                    tableHTML += '<tr>';
+                    tableHTML += `<td><span class="metric-badge">${index + 1}</span></td>`;
+                    tableHTML += `<td><strong>${team.posteam}</strong></td>`;
+                    tableHTML += `<td>${team.avg_occi.toFixed(2)}</td>`;
+                    tableHTML += `<td>${team.median_occi.toFixed(2)}</td>`;
+                    tableHTML += `<td>${team.total_plays}</td>`;
+                    tableHTML += `<td>${team.pass_rate.toFixed(1)}%</td>`;
+                    tableHTML += '</tr>';
+                });
+                
+                tableHTML += '</tbody></table>';
+                document.getElementById('teamTable').innerHTML = tableHTML;
+            })
+            .catch(error => {
+                document.getElementById('teamTable').innerHTML = 
+                    '<p style="color: red;">Error loading table: ' + error.message + '</p>';
+            });
+        
+        // Team detail chart handler
+        document.getElementById('teamSelect').addEventListener('change', function() {
+            const team = this.value;
+            if (!team) {
+                document.getElementById('teamDetailChart').innerHTML = 
+                    '<p class="loading">Select a team to view detailed breakdown...</p>';
+                return;
+            }
+            
+            document.getElementById('teamDetailChart').innerHTML = 
+                '<p class="loading">Loading team detail...</p>';
+            
+            fetch(`/api/team-detail/${team}`)
+                .then(response => response.json())
+                .then(data => {
+                    Plotly.newPlot('teamDetailChart', data.data, data.layout, {responsive: true});
+                })
+                .catch(error => {
+                    document.getElementById('teamDetailChart').innerHTML = 
+                        '<p style="color: red;">Error loading team detail: ' + error.message + '</p>';
+                });
+        });
+    </script>
+</body>
+</html>
