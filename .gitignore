@@ -58,3 +58,14 @@ htmlcov/
 
 # Jupyter
 .ipynb_checkpoints/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+.venv
+.env.local
+.cache/
+.ipynb_checkpoints
+.data/
+/data/
+.DS_Store
