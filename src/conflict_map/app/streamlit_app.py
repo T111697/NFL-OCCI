@@ -1,8 +1,8 @@
-"""
-Streamlit app to explore OCCI interactively.
-"""
+"""Streamlit app to explore OCCI interactively."""
+
 from __future__ import annotations
 
+import json
 import pathlib
 from typing import List
 
@@ -12,6 +12,7 @@ import streamlit as st
 from ..viz.plots import plot_team_season_occi, plot_team_season_trend
 
 DATA_DIR = pathlib.Path(__file__).resolve().parents[2] / "data" / "processed"
+METADATA_PATH = DATA_DIR / "occi_run_metadata.json"
 
 st.set_page_config(
     page_title="OCCI Lite Explorer",
@@ -24,6 +25,8 @@ st.set_page_config(
 @st.cache_data
 def build_demo_season_data() -> pd.DataFrame:
     demo = [
+        {"season": 2021, "team": "BUF", "season_occi_mean": 0.566, "season_occi_std": 0.06, "games": 17},
+        {"season": 2021, "team": "TB", "season_occi_mean": 0.559, "season_occi_std": 0.05, "games": 17},
         {"season": 2022, "team": "BUF", "season_occi_mean": 0.584, "season_occi_std": 0.06, "games": 17},
         {"season": 2022, "team": "PHI", "season_occi_mean": 0.565, "season_occi_std": 0.05, "games": 17},
         {"season": 2022, "team": "KC", "season_occi_mean": 0.602, "season_occi_std": 0.07, "games": 17},
@@ -33,6 +36,12 @@ def build_demo_season_data() -> pd.DataFrame:
         {"season": 2023, "team": "KC", "season_occi_mean": 0.593, "season_occi_std": 0.05, "games": 17},
         {"season": 2023, "team": "SF", "season_occi_mean": 0.578, "season_occi_std": 0.04, "games": 17},
         {"season": 2023, "team": "MIA", "season_occi_mean": 0.623, "season_occi_std": 0.06, "games": 17},
+        {"season": 2024, "team": "DET", "season_occi_mean": 0.601, "season_occi_std": 0.05, "games": 17},
+        {"season": 2024, "team": "DAL", "season_occi_mean": 0.588, "season_occi_std": 0.05, "games": 17},
+        {"season": 2025, "team": "KC", "season_occi_mean": 0.618, "season_occi_std": 0.04, "games": 17},
+        {"season": 2025, "team": "CIN", "season_occi_mean": 0.609, "season_occi_std": 0.05, "games": 17},
+        {"season": 2026, "team": "KC", "season_occi_mean": 0.627, "season_occi_std": 0.05, "games": 3},
+        {"season": 2026, "team": "BAL", "season_occi_mean": 0.603, "season_occi_std": 0.04, "games": 3},
     ]
     return pd.DataFrame(demo)
 
@@ -40,38 +49,44 @@ def build_demo_season_data() -> pd.DataFrame:
 @st.cache_data
 def build_demo_game_data() -> pd.DataFrame:
     demo = [
-        {"season": 2023, "week": 1, "game_id": "2023BUF1", "team": "BUF", "opponent": "NYJ", "plays": 64, "occi_mean": 0.64, "occi_std": 0.08},
-        {"season": 2023, "week": 2, "game_id": "2023BUF2", "team": "BUF", "opponent": "LVR", "plays": 62, "occi_mean": 0.60, "occi_std": 0.05},
-        {"season": 2023, "week": 3, "game_id": "2023BUF3", "team": "BUF", "opponent": "MIA", "plays": 65, "occi_mean": 0.63, "occi_std": 0.06},
-        {"season": 2023, "week": 1, "game_id": "2023MIA1", "team": "MIA", "opponent": "LAC", "plays": 68, "occi_mean": 0.66, "occi_std": 0.07},
-        {"season": 2023, "week": 2, "game_id": "2023MIA2", "team": "MIA", "opponent": "NE", "plays": 60, "occi_mean": 0.62, "occi_std": 0.06},
-        {"season": 2023, "week": 3, "game_id": "2023MIA3", "team": "MIA", "opponent": "BUF", "plays": 59, "occi_mean": 0.64, "occi_std": 0.05},
+        {"season": 2025, "week": 1, "game_id": "2025KC1", "team": "KC", "opponent": "LAC", "plays": 64, "occi_mean": 0.64, "occi_std": 0.08},
+        {"season": 2025, "week": 2, "game_id": "2025KC2", "team": "KC", "opponent": "CIN", "plays": 62, "occi_mean": 0.60, "occi_std": 0.05},
+        {"season": 2025, "week": 3, "game_id": "2025KC3", "team": "KC", "opponent": "BUF", "plays": 65, "occi_mean": 0.63, "occi_std": 0.06},
+        {"season": 2025, "week": 1, "game_id": "2025CIN1", "team": "CIN", "opponent": "CLE", "plays": 68, "occi_mean": 0.66, "occi_std": 0.07},
+        {"season": 2025, "week": 2, "game_id": "2025CIN2", "team": "CIN", "opponent": "BAL", "plays": 60, "occi_mean": 0.62, "occi_std": 0.06},
+        {"season": 2025, "week": 3, "game_id": "2025CIN3", "team": "CIN", "opponent": "KC", "plays": 59, "occi_mean": 0.64, "occi_std": 0.05},
+        {"season": 2026, "week": 1, "game_id": "2026BAL1", "team": "BAL", "opponent": "PIT", "plays": 63, "occi_mean": 0.62, "occi_std": 0.06},
+        {"season": 2026, "week": 2, "game_id": "2026BAL2", "team": "BAL", "opponent": "CLE", "plays": 61, "occi_mean": 0.61, "occi_std": 0.05},
+        {"season": 2026, "week": 3, "game_id": "2026BAL3", "team": "BAL", "opponent": "CIN", "plays": 60, "occi_mean": 0.63, "occi_std": 0.05},
     ]
     return pd.DataFrame(demo)
 
-import streamlit as st
-import pandas as pd
 
-from ..viz.plots import plot_team_season_occi
-
-DATA_DIR = pathlib.Path(__file__).resolve().parents[2] / "data" / "processed"
+@st.cache_data
+def load_run_metadata() -> dict | None:
+    if METADATA_PATH.exists():
+        try:
+            return json.loads(METADATA_PATH.read_text())
+        except json.JSONDecodeError:
+            return None
+    return None
 
 
 @st.cache_data
-def load_team_season_occi() -> pd.DataFrame:
+def load_team_season_occi() -> tuple[pd.DataFrame, pathlib.Path | None]:
     csv_path = DATA_DIR / "team_season_occi.csv"
     if csv_path.exists():
-        return pd.read_csv(csv_path)
+        return pd.read_csv(csv_path), csv_path
     st.info("Processed `team_season_occi.csv` not found. Using a short demo dataset so the UI remains explorable.")
-    return build_demo_season_data()
+    return build_demo_season_data(), None
 
 
 @st.cache_data
-def load_team_game_occi() -> pd.DataFrame | None:
+def load_team_game_occi() -> tuple[pd.DataFrame | None, pathlib.Path]:
     csv_path = DATA_DIR / "team_game_occi.csv"
     if csv_path.exists():
-        return pd.read_csv(csv_path)
-    return build_demo_game_data()
+        return pd.read_csv(csv_path), csv_path
+    return build_demo_game_data(), csv_path
 
 
 def style_app_shell() -> None:
@@ -154,11 +169,14 @@ def render_trend_section(df_season: pd.DataFrame, default_teams: List[str]) -> N
     )
 
 
-def render_game_section(df_game: pd.DataFrame | None, default_team: str | None) -> None:
+def render_game_section(df_game: pd.DataFrame | None, default_team: str | None, has_source_csv: bool) -> None:
     st.header("Game-level texture")
     if df_game is None or df_game.empty:
         st.info("Add `data/processed/team_game_occi.csv` to unlock game-level views.")
         return
+
+    if not has_source_csv:
+        st.info("Showing demo games. Generate processed data for your seasons to replace this slice.")
 
     teams = sorted(df_game["team"].unique())
     focus_team = st.selectbox("Focus team", options=teams, index=teams.index(default_team) if default_team in teams else 0)
@@ -196,38 +214,34 @@ def render_methodology() -> None:
             """
         )
 
-
-
 def main() -> None:
     style_app_shell()
     st.title("Offensive Conflict Creation Index (OCCI) — Lite")
     st.write("Explore league-wide stress creation using only public play-by-play signals.")
 
-    df_season = load_team_season_occi()
-    df_game = load_team_game_occi()
+    df_season, season_csv_path = load_team_season_occi()
+    df_game, game_csv_path = load_team_game_occi()
+    metadata = load_run_metadata()
+
+    if metadata:
+        base_range = metadata.get("base_seasons") or metadata.get("seasons", [])
+        range_text = (
+            f"{min(base_range)}–{max(base_range)}" if base_range else "custom selection"
+        )
+        latest_weeks = metadata.get("latest_weeks") or metadata.get("latest_weekly_update", {}).get("weeks")
+        week_text = ", ".join(map(str, latest_weeks)) if latest_weeks else "full season"
+        st.info(
+            f"Data coverage: historical {range_text} plus season {metadata.get('latest_season', 'N/A')} "
+            f"({week_text})."
+        )
 
     highlight_teams = render_season_section(df_season)
     render_trend_section(df_season, highlight_teams)
-    render_game_section(df_game, highlight_teams[0] if highlight_teams else None)
+    render_game_section(df_game, highlight_teams[0] if highlight_teams else None, game_csv_path.exists())
     render_methodology()
-    if not csv_path.exists():
-        st.error("team_season_occi.csv not found. Run the CLI to generate data first.")
-        st.stop()
-    return pd.read_csv(csv_path)
 
-
-def main() -> None:
-    st.title("Offensive Conflict Creation Index (OCCI) - Lite")
-
-    df_season = load_team_season_occi()
-    seasons = sorted(df_season["season"].unique())
-    selected_season = st.selectbox("Season", seasons, index=len(seasons) - 1)
-
-    st.subheader(f"Team OCCI for {selected_season}")
-    plot_team_season_occi(df_season, selected_season)
-
-    st.write("Raw data:")
-    st.dataframe(df_season[df_season["season"] == selected_season])
+    if season_csv_path is None:
+        st.warning("Using demo data. Run the CLI to generate `data/processed/team_season_occi.csv` for your seasons.")
 
 
 if __name__ == "__main__":

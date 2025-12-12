@@ -29,15 +29,12 @@ def download_season(season: int) -> Path:
     Returns the local path to the downloaded CSV.
     """
     ensure_data_dir()
-    # TODO: Wire this to a stable public CSV source (e.g., nflfastR exports on GitHub).
-    # Example approach (to be customized):
-    # url = f"https://github.com/nflverse/nflfastR-data/blob/master/data/pbp_{season}.csv.gz?raw=1"
-    # response = requests.get(url, timeout=30)
-    # response.raise_for_status()
-    # target = DATA_DIR / f"pbp_{season}.csv.gz"
-    # target.write_bytes(response.content)
-    # return target
-    raise NotImplementedError("Implement download_season with a real public CSV source")
+    url = f"https://github.com/nflverse/nflverse-data/releases/download/pbp/pbp_{season}.csv.gz"
+    response = requests.get(url, timeout=60)
+    response.raise_for_status()
+    target = DATA_DIR / f"pbp_{season}.csv.gz"
+    target.write_bytes(response.content)
+    return target
 
 
 def download_multiple_seasons(seasons: Iterable[int]) -> list[Path]:
@@ -50,3 +47,21 @@ def download_multiple_seasons(seasons: Iterable[int]) -> list[Path]:
     for season in seasons:
         paths.append(download_season(season))
     return paths
+
+
+def download_weekly(season: int, week: int) -> Path:
+    """Download a single week of play by play into ``data/raw/weekly``.
+
+    This keeps in-progress seasons lightweight while still enabling the
+    weekly update pipeline. The nflverse weekly exports follow the naming
+    convention ``pbp_<season>_<week>.csv.gz`` under the pbp_weekly release.
+    """
+
+    weekly_dir = DATA_DIR / "weekly"
+    weekly_dir.mkdir(parents=True, exist_ok=True)
+    url = f"https://github.com/nflverse/nflverse-data/releases/download/pbp_weekly/pbp_{season}_{week}.csv.gz"
+    response = requests.get(url, timeout=60)
+    response.raise_for_status()
+    target = weekly_dir / f"pbp_{season}_week_{week}.csv.gz"
+    target.write_bytes(response.content)
+    return target

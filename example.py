@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
-Example script demonstrating OCCI calculation and analysis
+Legacy example script demonstrating the original OCCI package.
+
+Prefer the `conflict_map` CLI (`python -m conflict_map.cli ...`) for the current
+end-to-end workflow; this script is kept for reference alongside the legacy
+Flask app.
 """
 
 from occi import OCCICalculator, load_nfl_data

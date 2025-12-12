@@ -6,12 +6,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-import pandas as pd
-
 from .data.load import load_raw_multiple_seasons
-from .features.build_features import engineer_basic_features
-from .model.conflict_score import compute_conflict_scores
-from .metrics.occi import compute_team_game_occi, compute_team_season_occi
+from .pipeline.updates import append_weekly_updates, build_from_ranges, run_pipeline
 
 
 def main() -> None:
@@ -20,25 +16,61 @@ def main() -> None:
         "--seasons",
         nargs="+",
         type=int,
-        required=True,
-        help="Seasons to include, e.g. 2019 2020 2021",
+        help="Explicit seasons to include, e.g. 2019 2020 2021. Overrides --base-start/--base-end.",
+    )
+    parser.add_argument(
+        "--base-start",
+        type=int,
+        default=2019,
+        help="First season to include in the historical baseline (default: 2019).",
+    )
+    parser.add_argument(
+        "--base-end",
+        type=int,
+        default=2025,
+        help="Last fully completed season to include in the historical baseline (default: 2025).",
+    )
+    parser.add_argument(
+        "--latest-season",
+        type=int,
+        default=2026,
+        help="In-progress or future season to tack on top of the baseline (default: 2026).",
+    )
+    parser.add_argument(
+        "--latest-weeks",
+        nargs="+",
+        type=int,
+        help="Optional list of week numbers for the latest season when only weekly exports are available.",
     )
     parser.add_argument(
         "--output-dir", type=Path, default=Path("data/processed"), help="Directory for output CSVs"
     )
+    parser.add_argument(
+        "--weekly-append",
+        nargs=2,
+        metavar=("SEASON", "WEEKS"),
+        help=(
+            "Append weekly files for a season to existing processed outputs without recomputing the baseline. "
+            "WEEKS should be a comma-separated list, e.g. 2026 1,2,3"
+        ),
+    )
     args = parser.parse_args()
+    if args.weekly_append:
+        season = int(args.weekly_append[0])
+        weeks = [int(w.strip()) for w in args.weekly_append[1].split(",") if w.strip()]
+        append_weekly_updates(args.output_dir, season=season, weeks=weeks)
+        return
 
-    df_raw = load_raw_multiple_seasons(args.seasons)
-    df_feat = engineer_basic_features(df_raw)
-    df_conf = compute_conflict_scores(df_feat)
+    if args.seasons:
+        df_raw = load_raw_multiple_seasons(args.seasons)
+        run_pipeline(df_raw, output_dir=args.output_dir, metadata={"explicit_seasons": args.seasons})
+        return
 
-    df_game = compute_team_game_occi(df_conf)
-    df_season = compute_team_season_occi(df_game)
+    base_seasons = range(args.base_start, args.base_end + 1)
+    latest_season = args.latest_season
+    latest_weeks = args.latest_weeks
 
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    df_conf.to_csv(args.output_dir / "plays_with_conflict_scores.csv", index=False)
-    df_game.to_csv(args.output_dir / "team_game_occi.csv", index=False)
-    df_season.to_csv(args.output_dir / "team_season_occi.csv", index=False)
+    build_from_ranges(base_seasons, latest_season=latest_season, latest_weeks=latest_weeks, output_dir=args.output_dir)
 
 
 if __name__ == "__main__":
