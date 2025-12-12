@@ -52,6 +52,12 @@ This loads raw data, engineers features, computes play-level conflict scores, an
 streamlit run src/conflict_map/app/streamlit_app.py
 ```
 
+The app now ships with a polished, wide-layout explorer. If your processed CSVs are missing, it will load a small demo dataset so you can still interact with the UI. Features include:
+
+- League pulse view with highlight teams, metric cards, and annotated horizontal bars.
+- Multi-team season trend comparison.
+- Game-level line charts and exports when `team_game_occi.csv` is available.
+- CSV download buttons for each view to take your slice to notebooks.
 Select a season to view team-level OCCI and browse the underlying table. Ensure processed CSVs exist first.
 
 ## Roadmap and future ideas
