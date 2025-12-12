@@ -54,12 +54,12 @@ def download_weekly(season: int, week: int) -> Path:
 
     This keeps in-progress seasons lightweight while still enabling the
     weekly update pipeline. The nflverse weekly exports follow the naming
-    convention ``pbp_<season>_<week>.csv.gz`` under the pbp_weekly release.
+    convention ``pbp_<season>_week_<week>.csv.gz`` under the pbp_weekly release.
     """
 
     weekly_dir = DATA_DIR / "weekly"
     weekly_dir.mkdir(parents=True, exist_ok=True)
-    url = f"https://github.com/nflverse/nflverse-data/releases/download/pbp_weekly/pbp_{season}_{week}.csv.gz"
+    url = f"https://github.com/nflverse/nflverse-data/releases/download/pbp_weekly/pbp_{season}_week_{week}.csv.gz"
     response = requests.get(url, timeout=60)
     response.raise_for_status()
     target = weekly_dir / f"pbp_{season}_week_{week}.csv.gz"
