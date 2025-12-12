@@ -32,6 +32,9 @@ class OCCICalculator:
         'situational': 0.15,
     }
     
+    # Maximum meaningful passing depth in yards for normalization
+    MAX_TARGET_DEPTH = 50.0
+    
     def __init__(self, pbp_data):
         """
         Initialize calculator with play-by-play data.
@@ -105,8 +108,8 @@ class OCCICalculator:
         pass_mask = self.pbp_data['pass_attempt'] == 1
         air_yards = self.pbp_data['air_yards'].fillna(0)
         
-        # Normalize air yards to 0-1 scale (assume max meaningful depth is 50 yards)
-        normalized_depth = np.clip(air_yards / 50.0, 0, 1)
+        # Normalize air yards to 0-1 scale
+        normalized_depth = np.clip(air_yards / self.MAX_TARGET_DEPTH, 0, 1)
         scores[pass_mask] = normalized_depth[pass_mask]
         
         # For run plays, use moderate fixed score

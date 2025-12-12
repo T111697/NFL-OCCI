@@ -89,7 +89,13 @@ Launch the interactive web dashboard:
 python webapp/app.py
 ```
 
-Then open your browser to `http://localhost:5000`
+Then open your browser to `http://localhost:5001`
+
+To enable debug mode during development:
+```bash
+export FLASK_DEBUG=true
+python webapp/app.py
+```
 
 The web app provides:
 - **Team Rankings**: Bar chart showing all teams ranked by average OCCI
